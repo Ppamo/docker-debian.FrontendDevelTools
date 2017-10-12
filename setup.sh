@@ -6,12 +6,12 @@ CMD="/tmp/scripts/run.sh"
 BRANCH=master
 
 usage(){
-	echo "./setup.sh [NODE BRANCH NAME]"
+	echo "./setup.sh [NODE VERSION]"
 }
 
 # check the branch name
 if [ $# -eq 1 ]; then
-	BRANCH=$1
+	BRANCH=v$1.x
 	MACHINE_NAME="nodejs_$BRANCH"
 else
 	usage
@@ -46,6 +46,10 @@ then
 	fi
 fi
 
+# set selinux permissions to be mounted as a volume in the container
+chcon -Rt svirt_sandbox_file_t $PWD/repos
+
+
 # if machine is running, just attach
 CONTAINER=$(docker ps | grep "$MACHINE_NAME" | awk '{ print $1 }')
 if [ "$CONTAINER" ]; then
@@ -63,7 +67,7 @@ else
 	else
 		# run a container from $IMAGENAME image
 		echo "==> creating container $CONTAINER"
-		docker run --privileged=true -di -P --name "$MACHINE_NAME" -v $PWD/code:/opt/nodejs -v $PWD/scripts:/tmp/scripts -e "NODE_BRANCH=$BRANCH" "$IMAGENAME:$IMAGETAG" $CMD
+		docker run --privileged=true -di -P --name "$MACHINE_NAME" -v $PWD/repos:/opt/repos -v $PWD/scripts:/tmp/scripts -e "NODE_BRANCH=$BRANCH" "$IMAGENAME:$IMAGETAG" $CMD
 		CONTAINER=$(docker ps | grep "$MACHINE_NAME" | awk '{ print $1 }')
 		docker logs -f $CONTAINER
 	fi

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# if node is available then there is not need to build it again
+# if node is not available then it should be built
 if ! which node > /dev/null 2>&1; then
-	cd /opt/nodejs
+	cd /opt/repos/nodejs
 	git checkout $NODE_BRANCH
 	make clean
 	./configure
@@ -15,4 +15,7 @@ if ! which node > /dev/null 2>&1; then
 	fi
 fi
 node -e "console.log('==> Hello from Node.js ' + process.version)"
+
+
+# keep working
 /bin/bash
