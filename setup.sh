@@ -2,21 +2,12 @@
 IMAGENAME=debian-frontend.devel
 IMAGETAG=latest
 IMAGEVERSION=v0.1
-CMD="/tmp/scripts/run.sh"
-BRANCH=master
+MACHINE_NAME=node_frontend_devel
+CMD=""
 
 usage(){
 	echo "./setup.sh [NODE VERSION]"
 }
-
-# check the branch name
-if [ $# -eq 1 ]; then
-	BRANCH=v$1.x
-	MACHINE_NAME="nodejs_$BRANCH"
-else
-	usage
-	exit 1
-fi
 
 # check if docker is running
 docker info > /dev/null 2>&1
@@ -38,7 +29,7 @@ docker images | grep "$IMAGENAME" | grep "$IMAGETAG" > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
 	# create the docker image
-	docker build --no-cache -t $IMAGENAME:$IMAGEVERSION -t $IMAGENAME:$IMAGETAG ./
+	docker build -t $IMAGENAME:$IMAGEVERSION -t $IMAGENAME:$IMAGETAG ./
 	if [ $? -ne 0 ]
 	then
 		echo "docker build failed!"
@@ -66,9 +57,10 @@ else
 		docker exec -ti $CONTAINER /bin/bash
 	else
 		# run a container from $IMAGENAME image
-		echo "==> creating container $CONTAINER"
-		docker run --privileged=true -di -P --name "$MACHINE_NAME" -v $PWD/repos:/opt/repos -v $PWD/scripts:/tmp/scripts -e "NODE_BRANCH=$BRANCH" "$IMAGENAME:$IMAGETAG" $CMD
+		echo "==> creating container named $MACHINE_NAME"
+		docker run --privileged=true -di -P --name "$MACHINE_NAME" -v $PWD/repos:/opt/repos -v $PWD/scripts:/tmp/scripts "$IMAGENAME:$IMAGETAG" $CMD
 		CONTAINER=$(docker ps | grep "$MACHINE_NAME" | awk '{ print $1 }')
+		echo "==> attaching to container $CONTAINER"
 		docker logs -f $CONTAINER
 	fi
 
